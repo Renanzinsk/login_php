@@ -2,14 +2,33 @@
 $mensagem = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $email = $_POST['email'] ?? '';
-    $senha = $_POST['senha'] ?? '';
+    $email_digitado = $_POST['email'] ?? '';
+    $senha_digitada = $_POST['senha'] ?? '';
 
-    // Validação de teste (simulando um banco de dados)
-    if ($email === 'admin@teste.com' && $senha === '123') {
-        $mensagem = "<p class='sucesso'>Login feito com sucesso!</p>";
+    $regex_email = "/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/";
+
+    if (!preg_match($regex_email, $email_digitado)) {
+        $mensagem = "<p class='erro'>Formato de e-mail inválido!</p>";
     } else {
-        $mensagem = "<p class='erro'>E-mail ou senha incorretos.</p>";
+        $arquivo_json = file_get_contents('usuarios.json');
+        $usuarios = json_decode($arquivo_json, true);
+
+        $acesso_liberado = false;
+
+        if ($usuarios) {
+            foreach ($usuarios as $usuario) {
+                if ($usuario['email'] === $email_digitado && $usuario['senha'] === $senha_digitada) {
+                    $acesso_liberado = true;
+                    break; 
+                }
+            }
+        }
+
+        if ($acesso_liberado) {
+            $mensagem = "<p class='sucesso'>Acesso liberado! Bem-vindo.</p>";
+        } else {
+            $mensagem = "<p class='erro'>E-mail ou senha incorretos.</p>";
+        }
     }
 }
 ?>
@@ -49,13 +68,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             margin-bottom: 5px;
             color: #555;
         }
+        input[type="text"],
         input[type="email"],
         input[type="password"] {
             width: 100%;
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 4px;
-            box-sizing: border-box; /* Garante que o padding não quebre o tamanho do input */
+            box-sizing: border-box; 
         }
         button {
             width: 100%;
@@ -92,7 +112,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <form action="index.php" method="POST">
             <div class="campo">
                 <label for="email">E-mail:</label>
-                <input type="email" name="email" id="email" required>
+
+                <input type="text" name="email" id="email" required>
             </div>
 
             <div class="campo">
